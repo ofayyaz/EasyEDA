@@ -10,25 +10,6 @@ from scipy.stats import percentileofscore
 import numpy as np
 import math
 
-# update to your path
-data_url = "~/coding/kaggle/housing/data/train.csv"
-
-@st.cache_data
-def load_data(url):
-    return pd.read_csv(url)
-
-train_df= load_data(data_url)
-
-train_cat = train_df.select_dtypes(include="object")
-train_num = train_df.select_dtypes(include ="number")
-train_num_cols = train_num.columns
-
-selected_cat = st.sidebar.selectbox("Categorical Atrribute", list(train_cat))
-selected_num = st.sidebar.selectbox("Numerical Atrribute", list(train_num))
-
-tab1, tab2, tab3, tab4 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢Num Attribs"])
-tab1.caption("Correlations between Selected Categorical and Numerical Atrributes")
-
 class CategoricalFeatureHandler:
     def __init__(self, dataset):
         self.df = dataset.copy()
@@ -158,7 +139,7 @@ class CategoricalFeatureHandler:
 
         for i, cat_stats in enumerate(category_stats):
             ypos = 1 - (5 / 2 + i) * yspace
-            plt.axhline(ypos + yspace / 2, color="white", linewidth=5)
+            plt.axhline(ypos + yspace / 2, color="black", linewidth=5)
             for j, cat_stat in enumerate(cat_stats.split(";")):
                 xpos = (1 / 2 + j) * xspace
                 plt.text(xpos, ypos, cat_stat, ha="center", va="center")
@@ -180,57 +161,144 @@ def calculate_stats(dataframe):
                 result_df = pd.concat([result_df, temp_df], ignore_index=True)
     return result_df
 
-category_handler1 = CategoricalFeatureHandler(train_df)
+uploaded_file = st.sidebar.file_uploader("Choose a file")
+st.sidebar.divider()
+
+@st.cache_data
+def load_data(data_file):
+    return pd.read_csv(data_file)
+
+if uploaded_file is not None:
+    data_df= load_data(uploaded_file)
+
+data_cat = data_df.select_dtypes(include="object")
+data_num = data_df.select_dtypes(include ="number")
+data_num_cols = data_num.columns
+
+selected_cat = st.sidebar.selectbox("Categorical Atrribute", list(data_cat))
+selected_num = st.sidebar.selectbox("Numerical Atrribute", list(data_num))
+
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
+tab1.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
+
+
+
+category_handler1 = CategoricalFeatureHandler(data_df)
 category_handler1.create_categories_info(selected_cat, selected_num)
 category_handler1.categories_info_plot(selected_cat, selected_num)
 
 st.sidebar.divider()
+target_attribute = st.sidebar.selectbox(f"Target Attribute for heatmap & outliers", list(data_num_cols))
+st.sidebar.divider()
 dataframe_select = st.sidebar.radio("Select dataframe", ["Full", "Numerical", "Categorical"])
-
+        
+container = tab2.container()
+colA, colB, colC = container.columns(3)
+colA.write('Number of Numerical Attributes:')
+colA.write(len(data_num.columns))
+colB.write('Number of Categorical Attributes:')
+colB .write(len(data_cat.columns))
+colC.write("Total number of records")
+colC.write(len(data_df))
 if dataframe_select== "Full":   
-    tab2.write(train_df)
+    tab2.write(data_df)
 elif dataframe_select == "Numerical":
-    tab2.write(train_num)
+    tab2.write(data_num)
 elif dataframe_select == "Categorical":
-    tab2.write(train_cat)
+    tab2.write(data_cat)
+    tab2.write("Categorical attributes details:")
+with tab2:  
+    container1 = st.container()
+    container1.markdown("**<h4 style='text-align: center; color: lightgray;'>Details of Categorical Attributes</h4>**", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    threshold = 0.10    
+    for i, attrib in enumerate(data_cat.columns):
+        category_summary = {}
+        column_to_write = None
+        if (i % 3) == 0:
+            column_to_write = col1
+        elif (i % 3) == 1:
+            column_to_write = col2
+        elif (i % 3) == 2:
+            column_to_write = col3
+        # Display attribute name
+        column_to_write.divider()
+        #style = "<style>h6 {text-align: center;}</style>"
+        #column_to_write.markdown(style, unsafe_allow_html=True)
+        column_to_write.write(f"**{data_cat[attrib].name}**")
+        #column_to_write.markdown("**<h5 style='text-align: center; color: lightgray;'>{data_cat[attrib].name}</h5>**", unsafe_allow_html=True)
+
+        # Display value counts and normalized value counts on the same row
+        value_counts = data_cat[attrib].value_counts()
+        normalized_value_counts = data_cat[attrib].value_counts(normalize=True)
+
+        for value, count in value_counts.items():
+            normalized_count = normalized_value_counts[value]
+            if normalized_count < threshold:
+                category_summary.setdefault('Miscellaneous', {'count': 0, 'normalized_count': 0, 'categories':0})
+                category_summary['Miscellaneous']['count'] += count
+                category_summary['Miscellaneous']['categories'] = 1+category_summary['Miscellaneous']['categories']
+                category_summary['Miscellaneous']['normalized_count'] += normalized_count
+            else:
+                column_to_write.write(f"{value}: {count} ({normalized_count:.2%})")
+
+# Display the aggregated 'Miscellaneous' line
+        if 'Miscellaneous' in category_summary:
+            if category_summary['Miscellaneous']['categories'] == 1:
+                column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} category: {category_summary['Miscellaneous']['count']} "
+               f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
+            elif category_summary['Miscellaneous']['categories'] > 1:
+                column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} categories: {category_summary['Miscellaneous']['count']} "
+               f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
+
 st.sidebar.divider()
 toggle_heatmap = st.sidebar.toggle("Full Heatmap")
 
-corr = train_num.corr()
+corr = data_num.corr()
 triu_mask_full = np.triu(corr)
-high_corr_cols=corr.loc[corr['SalePrice']>0.6,'SalePrice'].index
-high_corr=train_num[high_corr_cols].corr()
+high_corr_cols=corr.loc[corr[target_attribute]>0.6,target_attribute].index
+high_corr=data_num[high_corr_cols].corr()
 triu_mask = np.triu(high_corr)
 
 with tab3:
-    st.header("Intercorrelation Matrix Heatmap")
-    
     if toggle_heatmap:
+        st.header("Intercorrelation Matrix Heatmap - Complete")
         fig_hm=plt.figure(figsize=(10,10))
         plt.style.use('dark_background')
         sns.heatmap(corr, square=True,annot = False, mask=triu_mask_full)
         st.pyplot(fig_hm)
     else:
+        st.header("Intercorrelation Matrix Heatmap - Salients")
         fig_hm=plt.figure(figsize=(10,10))
         plt.style.use('dark_background')
         sns.heatmap(high_corr, square=True,annot = True, linewidth=2,mask=triu_mask,cmap='mako')
         st.pyplot(fig_hm)
 
-train_num_colsx = train_num_cols.drop(["Id","SalePrice"])
-stats = calculate_stats(train_num[train_num_colsx])
+# put a selection for columns to drop
+data_num_colsx = data_num_cols.drop(["Id","SalePrice"])
+stats = calculate_stats(data_num[data_num_colsx])
 features = list(stats[stats['Rel Mn-Md Diff'] > 5]['Attribute'])
 num_rows = math.ceil(len(features)/3)
-outliers = list(train_df[features].max()*0.8)
+outliers = list(data_df[features].max()*0.8)
         
 with tab4:
-    st.header("Outliers")
+    st.header(f"Outliers versus target: **{target_attribute}**")
     fig_outliers, axes = plt.subplots(nrows=num_rows, ncols=3, figsize = (12,8), tight_layout=True, sharey=True)
     for i, (feature, outlier) in enumerate(zip(features, outliers)):
-        sns.scatterplot(x=train_df[feature],
-                    y = train_df["SalePrice"], color = "navy",
+        sns.scatterplot(x=data_df[feature],
+                    y = data_df[target_attribute], color = "navy",
                     ax = axes[i//3,i%3],
                    )
-        df = train_df.loc[train_df[feature]>outlier, [feature, "SalePrice"]]
-        sns.scatterplot(data = df, x = feature, y = "SalePrice", ax = axes[i//3,i%3], color="red", marker="X")
+        df = data_df.loc[data_df[feature]>outlier, [feature, target_attribute]]
+        sns.scatterplot(data = df, x = feature, y = target_attribute, ax = axes[i//3,i%3], color="red", marker="X")
     st.pyplot(fig_outliers)
        
+with tab5:   
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    plt.style.use('dark_background')
+    fig_hist, ax_hist =plt.subplots()
+    data_num.hist(figsize=(20, 20), xlabelsize=10, ylabelsize=10,color='#D0E11C',bins=30,)    
+    st.pyplot()    
+    data_num.describe().T
+
+    
