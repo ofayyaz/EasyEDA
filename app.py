@@ -161,6 +161,10 @@ def calculate_stats(dataframe):
                 result_df = pd.concat([result_df, temp_df], ignore_index=True)
     return result_df
 
+
+image_path = 'data_insights_dashboard.png'
+st.image(image_path, caption='Data Insights Dashboard')
+
 uploaded_file = st.sidebar.file_uploader("Choose a file")
 st.sidebar.divider()
 
@@ -171,137 +175,141 @@ def load_data(data_file):
 if uploaded_file is not None:
     data_df= load_data(uploaded_file)
 
-elif st.sidebar.warning("Please upload a data file to proceed.")
-    st.stop()
+    data_cat = data_df.select_dtypes(include="object")
 
-data_cat = data_df.select_dtypes(include="object")
-data_num = data_df.select_dtypes(include ="number")
-data_num_cols = data_num.columns
+    data_cat = data_df.select_dtypes(include="object")
+    data_num = data_df.select_dtypes(include ="number")
+    data_num_cols = data_num.columns
 
-selected_cat = st.sidebar.selectbox("Categorical Atrribute", list(data_cat))
-selected_num = st.sidebar.selectbox("Numerical Atrribute", list(data_num))
+    selected_cat = st.sidebar.selectbox("Categorical Atrribute", list(data_cat))
+    selected_num = st.sidebar.selectbox("Numerical Atrribute", list(data_num))
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
-tab1.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
-
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
+    tab1.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
 
 
-category_handler1 = CategoricalFeatureHandler(data_df)
-category_handler1.create_categories_info(selected_cat, selected_num)
-category_handler1.categories_info_plot(selected_cat, selected_num)
 
-st.sidebar.divider()
-target_attribute = st.sidebar.selectbox(f"Target Attribute for heatmap & outliers", list(data_num_cols))
-st.sidebar.divider()
-dataframe_select = st.sidebar.radio("Select dataframe", ["Full", "Numerical", "Categorical"])
-        
-container = tab2.container()
-colA, colB, colC = container.columns(3)
-colA.write('Number of Numerical Attributes:')
-colA.write(len(data_num.columns))
-colB.write('Number of Categorical Attributes:')
-colB .write(len(data_cat.columns))
-colC.write("Total number of records")
-colC.write(len(data_df))
-if dataframe_select== "Full":   
+    category_handler1 = CategoricalFeatureHandler(data_df)
+    category_handler1.create_categories_info(selected_cat, selected_num)
+    category_handler1.categories_info_plot(selected_cat, selected_num)
+
+    st.sidebar.divider()
+    target_attribute = st.sidebar.selectbox(f"Target Attribute for heatmap & outliers", list(data_num_cols))
+    st.sidebar.divider()
+    dataframe_select = st.sidebar.radio("Select dataframe", ["Full", "Numerical", "Categorical"])
+
+    container = tab2.container()
+    colA, colB, colC = container.columns(3)
+    colA.write('Number of Numerical Attributes:')
+    colA.write(len(data_num.columns))
+    colB.write('Number of Categorical Attributes:')
+    colB .write(len(data_cat.columns))
+    colC.write("Total number of records")
+    colC.write(len(data_df))
+    if dataframe_select== "Full":   
     tab2.write(data_df)
-elif dataframe_select == "Numerical":
+    elif dataframe_select == "Numerical":
     tab2.write(data_num)
-elif dataframe_select == "Categorical":
+    elif dataframe_select == "Categorical":
     tab2.write(data_cat)
     tab2.write("Categorical attributes details:")
-with tab2:  
+    with tab2:  
     container1 = st.container()
     container1.markdown("**<h4 style='text-align: center; color: lightgray;'>Details of Categorical Attributes</h4>**", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     threshold = 0.10    
     for i, attrib in enumerate(data_cat.columns):
-        category_summary = {}
-        column_to_write = None
-        if (i % 3) == 0:
-            column_to_write = col1
-        elif (i % 3) == 1:
-            column_to_write = col2
-        elif (i % 3) == 2:
-            column_to_write = col3
-        # Display attribute name
-        column_to_write.divider()
-        #style = "<style>h6 {text-align: center;}</style>"
-        #column_to_write.markdown(style, unsafe_allow_html=True)
-        column_to_write.write(f"**{data_cat[attrib].name}**")
-        #column_to_write.markdown("**<h5 style='text-align: center; color: lightgray;'>{data_cat[attrib].name}</h5>**", unsafe_allow_html=True)
+    category_summary = {}
+    column_to_write = None
+    if (i % 3) == 0:
+        column_to_write = col1
+    elif (i % 3) == 1:
+        column_to_write = col2
+    elif (i % 3) == 2:
+        column_to_write = col3
+    # Display attribute name
+    column_to_write.divider()
+    #style = "<style>h6 {text-align: center;}</style>"
+    #column_to_write.markdown(style, unsafe_allow_html=True)
+    column_to_write.write(f"**{data_cat[attrib].name}**")
+    #column_to_write.markdown("**<h5 style='text-align: center; color: lightgray;'>{data_cat[attrib].name}</h5>**", unsafe_allow_html=True)
 
-        # Display value counts and normalized value counts on the same row
-        value_counts = data_cat[attrib].value_counts()
-        normalized_value_counts = data_cat[attrib].value_counts(normalize=True)
+    # Display value counts and normalized value counts on the same row
+    value_counts = data_cat[attrib].value_counts()
+    normalized_value_counts = data_cat[attrib].value_counts(normalize=True)
 
-        for value, count in value_counts.items():
-            normalized_count = normalized_value_counts[value]
-            if normalized_count < threshold:
-                category_summary.setdefault('Miscellaneous', {'count': 0, 'normalized_count': 0, 'categories':0})
-                category_summary['Miscellaneous']['count'] += count
-                category_summary['Miscellaneous']['categories'] = 1+category_summary['Miscellaneous']['categories']
-                category_summary['Miscellaneous']['normalized_count'] += normalized_count
-            else:
-                column_to_write.write(f"{value}: {count} ({normalized_count:.2%})")
+    for value, count in value_counts.items():
+        normalized_count = normalized_value_counts[value]
+        if normalized_count < threshold:
+            category_summary.setdefault('Miscellaneous', {'count': 0, 'normalized_count': 0, 'categories':0})
+            category_summary['Miscellaneous']['count'] += count
+            category_summary['Miscellaneous']['categories'] = 1+category_summary['Miscellaneous']['categories']
+            category_summary['Miscellaneous']['normalized_count'] += normalized_count
+        else:
+            column_to_write.write(f"{value}: {count} ({normalized_count:.2%})")
 
-# Display the aggregated 'Miscellaneous' line
-        if 'Miscellaneous' in category_summary:
-            if category_summary['Miscellaneous']['categories'] == 1:
-                column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} category: {category_summary['Miscellaneous']['count']} "
-               f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
-            elif category_summary['Miscellaneous']['categories'] > 1:
-                column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} categories: {category_summary['Miscellaneous']['count']} "
-               f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
+    # Display the aggregated 'Miscellaneous' line
+    if 'Miscellaneous' in category_summary:
+        if category_summary['Miscellaneous']['categories'] == 1:
+            column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} category: {category_summary['Miscellaneous']['count']} "
+            f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
+        elif category_summary['Miscellaneous']['categories'] > 1:
+            column_to_write.write(f"& {category_summary['Miscellaneous']['categories']} categories: {category_summary['Miscellaneous']['count']} "
+            f"({category_summary['Miscellaneous']['normalized_count']:.2%})")
 
-st.sidebar.divider()
-toggle_heatmap = st.sidebar.toggle("Full Heatmap")
+    st.sidebar.divider()
+    toggle_heatmap = st.sidebar.toggle("Full Heatmap")
 
-corr = data_num.corr()
-triu_mask_full = np.triu(corr)
-high_corr_cols=corr.loc[corr[target_attribute]>0.6,target_attribute].index
-high_corr=data_num[high_corr_cols].corr()
-triu_mask = np.triu(high_corr)
+    corr = data_num.corr()
+    triu_mask_full = np.triu(corr)
+    high_corr_cols=corr.loc[corr[target_attribute]>0.6,target_attribute].index
+    high_corr=data_num[high_corr_cols].corr()
+    triu_mask = np.triu(high_corr)
 
-with tab3:
+    with tab3:
     if toggle_heatmap:
-        st.header("Intercorrelation Matrix Heatmap - Complete")
-        fig_hm=plt.figure(figsize=(10,10))
-        plt.style.use('dark_background')
-        sns.heatmap(corr, square=True,annot = False, mask=triu_mask_full)
-        st.pyplot(fig_hm)
+    st.header("Intercorrelation Matrix Heatmap - Complete")
+    fig_hm=plt.figure(figsize=(10,10))
+    plt.style.use('dark_background')
+    sns.heatmap(corr, square=True,annot = False, mask=triu_mask_full)
+    st.pyplot(fig_hm)
     else:
-        st.header("Intercorrelation Matrix Heatmap - Salients")
-        fig_hm=plt.figure(figsize=(10,10))
-        plt.style.use('dark_background')
-        sns.heatmap(high_corr, square=True,annot = True, linewidth=2,mask=triu_mask,cmap='mako')
-        st.pyplot(fig_hm)
+    st.header("Intercorrelation Matrix Heatmap - Salients")
+    fig_hm=plt.figure(figsize=(10,10))
+    plt.style.use('dark_background')
+    sns.heatmap(high_corr, square=True,annot = True, linewidth=2,mask=triu_mask,cmap='mako')
+    st.pyplot(fig_hm)
 
-# put a selection for columns to drop
-data_num_colsx = data_num_cols.drop(["Id","SalePrice"])
-stats = calculate_stats(data_num[data_num_colsx])
-features = list(stats[stats['Rel Mn-Md Diff'] > 5]['Attribute'])
-num_rows = math.ceil(len(features)/3)
-outliers = list(data_df[features].max()*0.8)
-        
-with tab4:
+    # put a selection for columns to drop
+    data_num_colsx = data_num_cols.drop(["Id","SalePrice"])
+    stats = calculate_stats(data_num[data_num_colsx])
+    features = list(stats[stats['Rel Mn-Md Diff'] > 5]['Attribute'])
+    num_rows = math.ceil(len(features)/3)
+    outliers = list(data_df[features].max()*0.8)
+
+    with tab4:
     st.header(f"Outliers versus target: **{target_attribute}**")
     fig_outliers, axes = plt.subplots(nrows=num_rows, ncols=3, figsize = (12,8), tight_layout=True, sharey=True)
     for i, (feature, outlier) in enumerate(zip(features, outliers)):
-        sns.scatterplot(x=data_df[feature],
-                    y = data_df[target_attribute], color = "navy",
-                    ax = axes[i//3,i%3],
-                   )
-        df = data_df.loc[data_df[feature]>outlier, [feature, target_attribute]]
-        sns.scatterplot(data = df, x = feature, y = target_attribute, ax = axes[i//3,i%3], color="red", marker="X")
+    sns.scatterplot(x=data_df[feature],
+                y = data_df[target_attribute], color = "navy",
+                ax = axes[i//3,i%3],
+                )
+    df = data_df.loc[data_df[feature]>outlier, [feature, target_attribute]]
+    sns.scatterplot(data = df, x = feature, y = target_attribute, ax = axes[i//3,i%3], color="red", marker="X")
     st.pyplot(fig_outliers)
-       
-with tab5:   
+
+    with tab5:   
     st.set_option('deprecation.showPyplotGlobalUse', False)
     plt.style.use('dark_background')
     fig_hist, ax_hist =plt.subplots()
     data_num.hist(figsize=(20, 20), xlabelsize=10, ylabelsize=10,color='#D0E11C',bins=30,)    
     st.pyplot()    
     data_num.describe().T
+
+elif st.sidebar.warning("Please upload a data file to proceed.")
+    st.stop()
+
+
 
     
