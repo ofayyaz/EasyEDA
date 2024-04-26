@@ -186,10 +186,10 @@ if uploaded_file is not None:
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
     
-    with tab1:
+    with tab2:
     
 
-    tab2.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
+        tab2.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
 
 
 
