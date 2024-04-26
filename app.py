@@ -206,7 +206,7 @@ if uploaded_file is not None:
     colB .write(len(data_cat.columns))
     colC.write("Total number of records")
     colC.write(len(data_df))
-    
+
     if dataframe_select== "Full":   
         tab2.write(data_df)
     elif dataframe_select == "Numerical":
@@ -309,7 +309,8 @@ if uploaded_file is not None:
         st.pyplot()    
         data_num.describe().T
 
-elif st.sidebar.warning("Please upload a data file to proceed.")
+elif ploaded_file is None:
+    st.sidebar.warning("Please upload a data file to proceed.")
     st.stop()
 
 
