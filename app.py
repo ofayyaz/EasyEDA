@@ -163,7 +163,7 @@ def calculate_stats(dataframe):
 
 
 image_path = 'data_insights_dashboard.png'
-st.image(image_path, caption='Data Insights Dashboard')
+
 
 uploaded_file = st.sidebar.file_uploader("Choose a file")
 st.sidebar.divider()
@@ -184,8 +184,12 @@ if uploaded_file is not None:
     selected_cat = st.sidebar.selectbox("Categorical Atrribute", list(data_cat))
     selected_num = st.sidebar.selectbox("Numerical Atrribute", list(data_num))
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
-    tab1.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([" Home","📈 Chart", "🗃 Data", ":thermometer: Heat Map", "🔢 Outliers", "📊 Histograms"])
+    
+    with tab1:
+        st.image(image_path, caption='Data Insights Dashboard')
+        
+    tab2.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
 
 
 
@@ -215,7 +219,7 @@ if uploaded_file is not None:
         tab2.write(data_cat)
         tab2.write("Categorical attributes details:")
 
-    with tab2:  
+    with tab3:  
         container1 = st.container()
         container1.markdown("**<h4 style='text-align: center; color: lightgray;'>Details of Categorical Attributes</h4>**", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
@@ -268,7 +272,7 @@ if uploaded_file is not None:
     high_corr=data_num[high_corr_cols].corr()
     triu_mask = np.triu(high_corr)
 
-    with tab3:
+    with tab4:
         if toggle_heatmap:
             st.header("Intercorrelation Matrix Heatmap - Complete")
             fig_hm=plt.figure(figsize=(10,10))
@@ -289,7 +293,7 @@ if uploaded_file is not None:
     num_rows = math.ceil(len(features)/3)
     outliers = list(data_df[features].max()*0.8)
 
-    with tab4:
+    with tab5:
         st.header(f"Outliers versus target: **{target_attribute}**")
         fig_outliers, axes = plt.subplots(nrows=num_rows, ncols=3, figsize = (12,8), tight_layout=True, sharey=True)
         for i, (feature, outlier) in enumerate(zip(features, outliers)):
@@ -301,7 +305,7 @@ if uploaded_file is not None:
         sns.scatterplot(data = df, x = feature, y = target_attribute, ax = axes[i//3,i%3], color="red", marker="X")
         st.pyplot(fig_outliers)
 
-    with tab5:   
+    with tab6:   
         st.set_option('deprecation.showPyplotGlobalUse', False)
         plt.style.use('dark_background')
         fig_hist, ax_hist =plt.subplots()
