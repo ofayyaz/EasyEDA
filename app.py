@@ -171,6 +171,9 @@ def load_data(data_file):
 if uploaded_file is not None:
     data_df= load_data(uploaded_file)
 
+elif st.sidebar.warning("Please upload a data file to proceed.")
+    st.stop()
+
 data_cat = data_df.select_dtypes(include="object")
 data_num = data_df.select_dtypes(include ="number")
 data_num_cols = data_num.columns
