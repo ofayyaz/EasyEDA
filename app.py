@@ -309,7 +309,7 @@ if uploaded_file is not None:
         st.pyplot()    
         data_num.describe().T
 
-elif ploaded_file is None:
+elif uploaded_file is None:
     st.sidebar.warning("Please upload a data file to proceed.")
     st.stop()
 
