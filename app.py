@@ -206,6 +206,7 @@ if uploaded_file is not None:
     colB .write(len(data_cat.columns))
     colC.write("Total number of records")
     colC.write(len(data_df))
+    
     if dataframe_select== "Full":   
         tab2.write(data_df)
     elif dataframe_select == "Numerical":
@@ -213,6 +214,7 @@ if uploaded_file is not None:
     elif dataframe_select == "Categorical":
         tab2.write(data_cat)
         tab2.write("Categorical attributes details:")
+
     with tab2:  
         container1 = st.container()
         container1.markdown("**<h4 style='text-align: center; color: lightgray;'>Details of Categorical Attributes</h4>**", unsafe_allow_html=True)
