@@ -188,7 +188,7 @@ if uploaded_file is not None:
     
     with tab1:
         st.image(image_path, caption='Data Insights Dashboard')
-        
+
     tab2.caption(f"Correlations between Categorical attribute {selected_cat} and Numerical Atrribute {selected_num}")
 
 
@@ -315,6 +315,7 @@ if uploaded_file is not None:
 
 elif uploaded_file is None:
     st.sidebar.warning("Please upload a data file to proceed.")
+    st.image(image_path, caption='Data Insights Dashboard')
     st.stop()
 
 
