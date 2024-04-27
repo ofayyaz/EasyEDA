@@ -298,7 +298,7 @@ if uploaded_file is not None:
     # Define the columns to drop in a case-insensitive manner
     columns_to_drop = ['id', "index",'salesprice']
     filtered_columns_to_drop = [col for col in data_num_cols if col.lower() in columns_to_drop]
-    data_num_colsx = data_num.drop(columns=filtered_columns_to_drop, errors='ignore')
+    data_num_colsx = data_num_cols.drop(columns=filtered_columns_to_drop, errors='ignore')
     #data_num_colsx = data_num_cols.drop(["Id","SalePrice"])
     stats = calculate_stats(data_num[data_num_colsx])
     features = list(stats[stats['Rel Mn-Md Diff'] > 5]['Attribute'])
