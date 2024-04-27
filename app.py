@@ -170,7 +170,11 @@ st.sidebar.divider()
 
 @st.cache_data
 def load_data(data_file):
-    return pd.read_csv(data_file)
+    file_extension = data_file.name.split('.')[-1].lower()
+    if file_extension in ['csv']:
+        return pd.read_csv(data_file)
+    elif file_extension in ['xls', 'xlsx']:
+        return pd.read_excel(data_file)
 
 if uploaded_file is not None:
     data_df= load_data(uploaded_file)
