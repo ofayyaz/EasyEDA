@@ -175,6 +175,8 @@ def load_data(data_file):
         return pd.read_csv(data_file)
     elif file_extension in ['xls', 'xlsx']:
         return pd.read_excel(data_file)
+    else:
+        st.sidebar.warning("Please upload a data file to proceed.")
 
 if uploaded_file is not None:
     data_df= load_data(uploaded_file)
